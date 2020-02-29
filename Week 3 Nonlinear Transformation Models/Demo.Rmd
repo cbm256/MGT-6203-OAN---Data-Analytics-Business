@@ -1,0 +1,48 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#if (!require(Ecdat)) install.packages("Ecdat")
+library(Ecdat)
+library(ggplot2) 
+library(readr)
+library(dplyr)
+```
+
+```{r}
+data(Housing) 
+Housing <- 
+  Housing %>%
+  select(price, lotsize)
+```
+
+```{r}
+ggplot(Housing, aes(x = lotsize, y = price)) + geom_point() + labs(x = "lotsize") + labs(y = "price") + scale_colour_hue(l = 50) + geom_smooth(method = lm, size = 1.5) +theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title=element_text(size = 20))
+linear_linear <- lm(price ~ lotsize, Housing)
+plot(linear_linear)
+summary(linear_linear)
+```
+
+```{r}
+ggplot(Housing, aes(x = log(lotsize), y = price)) + geom_point() + labs(x = "lotsize") + labs(y = "price") + scale_colour_hue(l = 50) + geom_smooth(method = lm, size = 1.5) +theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title=element_text(size = 20))
+linear_log <- lm(price ~ log(lotsize), Housing)
+plot(linear_log)
+summary(linear_log)
+```
+
+```{r}
+ggplot(Housing, aes(x = lotsize, y = log(price))) + geom_point() + labs(x = "lotsize") + labs(y = "price") + scale_colour_hue(l = 50) + geom_smooth(method = lm, size = 1.5) +theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title=element_text(size = 20))
+log_linear <- lm(log(price) ~ lotsize, Housing)
+plot(log_linear)
+summary(log_linear)
+```
+
+```{r}
+ggplot(Housing, aes(x = log(lotsize), y = log(price))) + geom_point() + labs(x = "lotsize") + labs(y = "price") + scale_colour_hue(l = 50) + geom_smooth(method = lm, size = 1.5) +theme(axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15), axis.title=element_text(size = 20))
+log_log<- lm(log(price) ~ log(lotsize), Housing)
+plot(log_log)
+summary(log_log)
+```
+

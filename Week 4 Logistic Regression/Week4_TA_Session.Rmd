@@ -1,0 +1,157 @@
+---
+title: "Week4_TA_Session"
+author: "Ajinkya Panaskar"
+date: "2/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+
+```
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(ISLR)
+library(ROCR)
+```
+
+
+```{r}
+GradesR <- read_csv("GradesR.csv")
+```
+
+Boxplot - Hours vs Grades
+
+```{r}
+
+# Used factor function to convert Grade to a categorical variable 
+
+ggplot(data=GradesR, aes(x=factor(Grade), y = Hours, fill=factor(Grade))) + geom_boxplot() + ggtitle("BoxPlot for Hours of Studying vs. Grade") + labs(x="Grade", y="Hours")
+```
+
+Fitting linear model for Grade vs. Hours 
+
+```{r}
+ggplot(GradesR, aes(x=Hours, y=Grade)) + geom_point() +
+  scale_colour_hue(l=50) + 
+  geom_smooth(method=lm,   # Add linear regression lines
+              se=FALSE,    # Don't add shaded confidence region
+              fullrange=TRUE) 
+
+```
+
+```{r}
+a.lm <- lm(formula = Grade ~ Hours, data = GradesR)
+summary(a.lm)
+anova(a.lm)
+
+```
+
+Comparing performance of linear model (Red) with Logistic regression model (Blue)
+```{r}
+ggplot(GradesR, aes(x=Hours, y=Grade)) + geom_point() + 
+# add logit curve
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE) +
+#add the regression line
+    geom_smooth(method=lm,  color="red", # Add linear regression lines
+              se=FALSE,    # Don't add shaded confidence region
+              fullrange=TRUE) 
+```
+
+Default dataset: ISLR library
+
+```{r}
+Default_df <- Default
+glimpse(Default_df)
+```
+
+```{r}
+Default_df <- Default_df %>% mutate(dft_cat = ifelse(default=="Yes",1,0),
+                      stdt_cat = ifelse(student=="Yes",1,0))
+```
+
+Logistic Model 1
+```{r}
+Model1 <- glm(dft_cat ~ 1 , data = Default_df, family = "binomial")
+summary(Model1)
+
+Default_df %>% group_by(default) %>% summarise(number_of_datapoints=n())
+```
+
+Logistic Model 2
+
+```{r}
+Model2 <- glm(dft_cat ~ stdt_cat , data = Default_df, family = "binomial")
+summary(Model2)
+```
+
+Logistic Model 3
+
+```{r}
+Model3 <- glm(dft_cat ~ balance , data = Default_df, family = "binomial")
+summary(Model3)
+
+ggplot(Default_df, aes(x=balance, y=dft_cat)) + geom_point() + stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+
+```
+Logistic Model 4
+
+```{r}
+Model4 <- glm(dft_cat ~ balance + income + stdt_cat, data = Default_df, family = "binomial")
+summary(Model4)
+```
+
+Predicting default using Model 4
+
+```{r}
+Default_df <- Default_df %>% 
+  mutate(pred_prob_model4 = predict(Model4, newdata = ., type = "response")) %>% 
+  mutate(pred_outcome_model4 = ifelse(pred_prob_model4 >= 0.5,1,0))
+```
+
+```{r}
+ggplot(data=Default_df, aes(x=balance, y=pred_prob_model4, group=student, colour=student)) +
+  geom_line() +
+  geom_hline(aes(yintercept=0.058), colour="blue", linetype="dashed")+
+  geom_hline(aes(yintercept=0.015), colour="#990000", linetype="dashed") + 
+  labs(x="Balance", y="Default Rate") 
+  
+```
+
+Confusion Matrix
+
+```{r}
+xtabs(~dft_cat + pred_outcome_model4, data = Default_df)
+
+tally(group_by(Default_df,dft_cat,pred_outcome_model4))
+```
+
+ROC (Reciever Operating Characteristics) curve
+
+```{r}
+
+pred <- prediction(Default_df$pred_prob_model4,Default_df$dft) # create a prediction object in R
+class(pred)
+
+perf <- performance(pred, "tpr", "fpr") # tpr and fpr are true and false positive rates
+plot(perf, colorize=T)
+```
+
+Area under curve of ROC curve
+
+```{r}
+auc.perf <-  performance(pred, measure = "auc")
+auc.perf@y.values
+```
+
+Additional Reading:
+
+You can refer this link to get more understanding about Sensitivity, Specificity and ROC curve:
+https://www.medcalc.org/manual/roc-curves.php
