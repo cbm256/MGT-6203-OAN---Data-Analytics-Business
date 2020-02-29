@@ -1,0 +1,141 @@
+---
+title: "Intro to R and R Markdown"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+This is an intro to R and RMarkdown. We will discuss the basic functionality of the R language, as well as a few key packages.
+
+"R is a language and environment for statistical computing and graphics."
+
+The usefull of R is most notable for statistical work such as regression (linear, nonlinear etc) as well as graphing results.
+
+The benefits of R in its open source nature. This basically means the original code from which R is built, is publically available and can be edited and made available to everyone (with limitations)
+
+This proves to be very convenient with the plethora of packages availalbe in R, which allow complex methods to be quickly done using pre-defined functions. For example, there are multiple packages that facillitate regression, and the documentation to use these packages is easily accessed from https://cran.r-project.org/ (Comprehensive R archive network)
+
+You can download R from the link below, if you haven't done so already:
+https://cloud.r-project.org
+
+
+RStudio is a convenient development environment for R, where you can create documents that combine R code with annotation.
+
+You can download Rstudio from the link below if you haven't done so already. Note it is necesarry to download R before you can download RStudio
+
+http://www.rstudio.com/download
+
+
+Now to create a code block in RStudio, we use ```{r} (tilde key) to create a box as shown below:
+
+```{r}
+print('Hello World') 
+
+```
+
+The beauty of R (and Python) comes from the ease of loading packages  
+```{r include=FALSE}
+# install.packages("ggplot2")
+# install.packages("dplyr")
+# install.packages("readr")
+# install.packages("Ecdat")
+
+# if (!require(Ecdat)) install.packages("Ecdat")
+
+
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(Ecdat)
+
+
+
+```
+
+
+Next we load data. Most data files will be in the csv format. We can use readr to load these from a local directory:
+```{r}
+Five_factor_data <- read_csv("F-F_Research_Data_5_Factors_2x3.csv", col_types = cols(Date = col_date(format = "%Y%m")), skip = 3)
+
+str(Five_factor_data)
+
+glimpse(Five_factor_data)
+
+
+```
+
+Now we will use a dataset from the Ecdat package
+```{r}
+
+glimpse(Housing)
+
+Housing <-Housing
+
+Housing %>%
+  select_if(is.numeric)%>%
+  summarise_all(funs(mean(.,na.rm = TRUE)))
+
+Means_Housing <- Housing %>%
+  select_if(is.numeric)%>%
+  summarise_all(funs(mean(.,na.rm = TRUE),median(.,na.rm=TRUE)))
+
+Housing %>%
+  summarise_at(vars(lotsize, bedrooms),funs(Means = mean(.,na.rm = TRUE), StDev = sd(., na.rm = TRUE)))
+
+Housing$price %>%summary()
+
+```
+
+You may also want to compute means by group, to compare between groups.
+For that we can use the pipe syntax again and group the data first 
+
+```{r}
+Housing %>%
+  group_by(driveway)%>%
+  summarise_at(vars(price),funs(Mean = mean(.,na.rm=TRUE)))
+
+
+
+```
+
+Now we will introduce plotting using ggplot in R. 
+AS we aim to perform linear regression of Price on lotsize, let us look at an explanatory scatter plot of the 2 variables.
+```{r}
+# Scatter Plot of price (y) against bedrooms (x), including the linear regression line
+
+ggplot(Housing, aes(x=lotsize, y=price)) + geom_point() +
+  scale_colour_hue(l=50) + # Use a slightly darker palette than normal
+  geom_smooth(method=lm,   # Add linear regression lines
+              se=FALSE,    # Don't add shaded confidence region
+              fullrange=TRUE) # Extend regression lines
+
+
+# Multiple Regression - with two predictors lotsize and bedrooms
+
+
+```
+
+
+
+```{r}
+
+b.lm <- lm(formula = price ~ bedrooms, data = Housing)
+
+ab.lm <- lm(formula = price ~ lotsize + bedrooms, data = Housing)
+
+summary(b.lm)
+summary(ab.lm) 
+
+anova(ab.lm)   
+
+plot(b.lm)
+
+
+
+
+```
+
