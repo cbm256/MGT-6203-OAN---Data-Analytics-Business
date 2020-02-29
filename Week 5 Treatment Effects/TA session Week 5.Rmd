@@ -1,0 +1,66 @@
+---
+title: "TA Session Week 5"
+author: "Kamya"
+date: "2/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+install.packages("tidyverse")
+library(tidyverse)  
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Read the data
+```{r cars}
+mydata=read.csv("C://Users/kamya/Downloads/TA/TA Session Week 5/Paneldata.csv")
+mydata
+```
+
+Dummy variable to indicate the time when the treatment started. 
+Treatment starts in 1994. 
+```{r}
+mydata$time = ifelse(mydata$year >= 1994, 1, 0)
+head(mydata)
+```
+Dummy variable for groups exposed to the treatment. A,B,C,D were nottreated and E,F,G were treated
+```{r}
+mydata$treated = ifelse(mydata$country == "E" |mydata$country == "F" |mydata$country == "G", 1, 0)
+head(mydata)
+```
+METHOD 1
+
+Create an interaction between time and treated, call it did. 
+```{r}
+mydata$did = mydata$time * mydata$treated
+mydata
+```
+
+Estimating the DID estimator
+```{r}
+didreg = lm(y ~ treated + time + did, data = mydata)
+summary(didreg)
+didreg2 = lm(y ~ treated + time , data = mydata)
+summary(didreg2)
+```
+METHOD 2
+
+```{R}
+# Compute the four data points needed in the DID calculation:
+a = sapply(subset(mydata, time == 0 & treated == 0, select=y), mean)
+b = sapply(subset(mydata, time == 0 & treated == 1, select=y), mean)
+c = sapply(subset(mydata, time == 1 & treated == 0, select=y), mean)
+d = sapply(subset(mydata, time == 1 & treated == 1, select=y), mean)
+ 
+# Difference in difference parameter
+(d-c)-(b-a)
+
+```
+
+
+```{R}
+
+df <- df %>%
+  mutate(pred_prob_Model4 = predict(Model4, newdata = ., type = "response")) 
+%>% mutate(pred_outcome_Model4 = ifelse(pred_prob_Model4 >= 0.5, 1,0))
