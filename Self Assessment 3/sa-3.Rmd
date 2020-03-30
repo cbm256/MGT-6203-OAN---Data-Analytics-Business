@@ -1,0 +1,78 @@
+---
+title: 'WEEK 7: SELF ASSESSMENT 3 SOLUTIONS - Shrikanth Mahale'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 1: The purpose of this self-assessment is to implement performance metrics and understand how the given stocks perform with respect to the market, and which of the two stocks is a better investment to make. Follow the steps below, and answer the questions outside the code-block, in the R Markdown File in 1-2 sentences. Knit your code to HTML using R Studio for a more presentable format and submit the HTML file.
+Use echo = TRUE while knitting so that the code is seen.
+a. Load the ‘Return_Dataset.csv (Links to an external site.)’ file into your R Studio and print the first 10 rows. (1 point)
+            Note: The data contains monthly returns of-
+
+-->  	Risk Free Asset (RF)
+-->		Market (Mkt)
+-->		United Parcel Service (UPS)
+-->		KO (Coca Cola)
+
+```{r 1a}
+returns <- read.csv("Return_Dataset.csv")
+head(returns,10)
+```
+```{r 1}
+# fetchng libraries
+library(PerformanceAnalytics)
+library(xts)
+library(lubridate)
+```
+b. Plot and print the cumulative returns of the returns across time. Eventually, by seeing the graph, do UPS or KO outperform the Market? Explain. (2 points)
+Note: The graph should include the legend to evidently see a comparison.
+Hint: Use POSIXct for converting date into a time-series object.
+
+```{r 1b}
+returns$Date <- as.POSIXct(returns$Date, format="%Y-%m-%d")
+returns2<- returns[order(returns$Date),]
+All.dat <- xts(returns2[,-1],order.by = returns2[,1],)
+Return.cumulative(All.dat,geometric = TRUE)
+chart.CumReturns(All.dat[, c(2,3,4)],wealth.index = FALSE, geometric = TRUE,main = "Returns Comparison: Mkt/KO/UPS", legend.loc="topleft",)
+```
+c. Calculate and print the Sharpe Ratio and Treynor Ratio of UPS and KO. Which of the two is a better investment to make? Explain. (Use the StdDev Sharpe Ratio to compare) (3 points)
+Note: All the output can be printed on to the console, and the answers to the questions can be written outside the code-block.
+```{r 1c}
+SharpeRatio(All.dat$UPS,All.dat$RF)
+SharpeRatio(All.dat$KO,All.dat$RF)
+UPS_Treynor= TreynorRatio(All.dat$UPS,All.dat$Mkt,All.dat$RF)
+KO_Treynor=TreynorRatio(All.dat$KO,All.dat$Mkt,All.dat$RF)
+print(paste0('UPS Treynor Ratio is ',UPS_Treynor))
+print(paste0('KO Treynor Ratio is ',KO_Treynor))
+
+```
+KO Sharpe Ratio and Treynor Ratio are higher than UPS. Also charts in 1b reflect similar results. So KO is a better investment.
+
+
+
+Question 2: What are the different types of market efficiency and what does each type signify? (2 points) 
+
+Solution: Market efficiencies are of 3 types:
+
+Weak form: This states that information that we find in past prices and past volumes will not help us predict future returns on stocks.
+
+Semi Strong Form: This states that all information that is publicly available has already been reflected in the stock price and will not help us predict future returns. Essentially suggesting that the news headlines should be on stock / security price already.
+
+Strong form: This notes that this is expressed in stock price as long as information is known by at least one person. Thus the prices of protection represent all the public and private knowledge.
+
+Question 3: Name and briefly explain 4 types of behavioral biases? (1-2 lines) (2 points)
+
+Solution: Below are the 4 behavioral biases investors have and they tend to be correlated:
+
+Overconfidence: Tendency to overstate one's capacity
+
+Loss aversion: Individuals ' propensity to look for dignity and avoid mistakes in their decisions
+
+Recency effect: When people make decisions, they tend to overemphasize recent information and not the whole range of information that could lead us to extrapolate recent performance in the future.
+
+Anchoring: Individuals tend to act on the basis of a single fact or figure which should have little influence on their decision, while ignoring more important information
